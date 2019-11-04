@@ -7,3 +7,12 @@ d:\users\suuser\documents\visual studio 2015\Projects\cs535_server\cs535_server\
 d:\users\suuser\documents\visual studio 2015\Projects\cs535_server\cs535_server\obj\Debug\cs535_server.csproj.GenerateResource.Cache
 d:\users\suuser\documents\visual studio 2015\Projects\cs535_server\cs535_server\obj\Debug\cs535_server.exe
 d:\users\suuser\documents\visual studio 2015\Projects\cs535_server\cs535_server\obj\Debug\cs535_server.pdb
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\bin\Debug\cs535_server.exe.config
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\obj\Debug\cs535_server.exe
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\obj\Debug\cs535_server.pdb
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\bin\Debug\cs535_server.exe
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\bin\Debug\cs535_server.pdb
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\obj\Debug\cs535_server.csprojResolveAssemblyReference.cache
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\obj\Debug\cs535_server.Form1.resources
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\obj\Debug\cs535_server.Properties.Resources.resources
+D:\Users\suuser\Desktop\Rekeying_Server\cs535_server\obj\Debug\cs535_server.csproj.GenerateResource.Cache

@@ -12,6 +12,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+/*
+    CS535 Homework 1
+    Simge Demir
+    Şevval Şimşek
+     
+*/
+
 namespace cs535_server
 {
     public partial class Form1 : Form
@@ -19,8 +26,8 @@ namespace cs535_server
         bool terminating = false;
         bool listening = false;
         Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        Socket client ;
-        byte [] currentKey = null;
+        Socket client;
+        byte[] currentKey = null;
         string seed1 = null;
         string seed2 = null;
         int rekeyingCount = 0;
@@ -65,8 +72,8 @@ namespace cs535_server
             {
                 try
                 {
-                    client= serverSocket.Accept(); //since we don't know the username yet
-                    logs.AppendText("New client is connected!"+"\n");
+                    client = serverSocket.Accept(); //since we don't know the username yet
+                    logs.AppendText("New client is connected!" + "\n");
                     using (System.IO.StreamReader fileReader =
                         new System.IO.StreamReader("chain1.txt"))
                     {
@@ -87,68 +94,80 @@ namespace cs535_server
                 }
                 catch
                 {
-                    listening = false;
+                    if (terminating)
+                        listening = false;
+                    else
+                        logs.AppendText("Server stopped working!");
                 }
             }
         }
         private void Receive()
         {
-            while (listening)
+            bool connected = true;
+
+            while (connected && !terminating)
             {
                 try
+                {
+                    byte[] buffer = new byte[600];
+                    client.Receive(buffer);
+                    string incomingMessage = Encoding.Default.GetString(buffer);
+                    incomingMessage = incomingMessage.TrimEnd('\0');
+                    int index1 = incomingMessage.IndexOf("{");
+                    int index2 = incomingMessage.LastIndexOf("}");
+                    string hmacStr = incomingMessage.Substring(index1 + 1, index2 - index1 - 1);
+                    string encryptedMessage = incomingMessage.Substring(index2 + 1);
+                    byte[] IV = new byte[16];
+                    byte[] key = new byte[16];
+                    Array.Copy(currentKey, 0, key, 0, 16);
+                    Array.Copy(currentKey, 16, IV, 0, 16);
+                    byte[] hmacsha256 = applyHMACwithSHA256(encryptedMessage, key);
+                    if (hmacStr.Equals(Encoding.Default.GetString(hmacsha256)))
                     {
-                        byte[] buffer = new byte[600];
-                        client.Receive(buffer);
-                        string incomingMessage = Encoding.Default.GetString(buffer);
-                        incomingMessage = incomingMessage.TrimEnd('\0');
-                        int index1 = incomingMessage.IndexOf("{");
-                        int index2 = incomingMessage.IndexOf("}");
-                        string hmacStr = incomingMessage.Substring(index1 + 1, index2 - index1 - 1);
-                        string encryptedMessage = incomingMessage.Substring(index2 + 1);
-                        byte[] IV = new byte[16];
-                        byte[] key = new byte[16];
-                        Array.Copy(currentKey, 0, key, 0, 16);
-                        Array.Copy(currentKey, 16, IV, 0, 16);
-                        byte[] hmacsha256 = applyHMACwithSHA256(encryptedMessage, key);
-                        if (hmacStr.Equals(Encoding.Default.GetString(hmacsha256)))
+                        byte[] decryption = decryptWithAES128(encryptedMessage, key, IV);
+                        string message = Encoding.Default.GetString(decryption);
+                        logs.AppendText("Recieved message: " + message + "\n");
+                        if (message.Contains("rekey"))
                         {
-                            byte[] decryption = decryptWithAES128(encryptedMessage, key, IV);
-                            string message = Encoding.Default.GetString(decryption);
-                            logs.AppendText("Recieved message: " + message + "\n");
-                            if (message.Contains("rekey"))
-                            {
-                                rekeyingCount++;
-                                currentKey = getKey(1 + rekeyingCount, 100 - rekeyingCount);
-                                logs.AppendText("New key: "+ generateHexStringFromByteArray(currentKey)+"\n");
-                            }
-                        }
-                        else
-                        {
-                            logs.AppendText("HMAC cannot be verified!");
-                        }
-                }
-                    catch (Exception e)
-                    {
-                        Console.Write(e);
-                        if (!terminating)
-                        {
-                            client.Close();
-                        }
-                        else
-                        {
-                            logs.AppendText("The server stopped working \n");
-                            listening = false;
+                            rekeyingCount++;
+                            currentKey = getKey(1 + rekeyingCount, 100 - rekeyingCount);
+                            logs.AppendText("Switched to new key\n");
+                            //logs.AppendText("New key: " + generateHexStringFromByteArray(currentKey) + "\n");
                         }
                     }
+                    else
+                    {
+                        logs.AppendText("HMAC cannot be verified!");
+                        client.Close();
+                        connected = false;
+                    }
                 }
-          }
-        public byte [] getKey(int firstIndex,int secondIndex)
+                catch (Exception e)
+                {
+                    Console.Write(e);
+                    if (!terminating)
+                    {
+                        client.Close();
+                        logs.AppendText("Client is disconnected.");
+                        // key sifirla
+                        rekeyingCount = 0;
+                        connected = false;
+                    }
+                    else
+                    {
+                        logs.AppendText("The server stopped working \n");
+                        listening = false;
+                    }
+                }
+            }
+        }
+        public byte[] getKey(int firstIndex, int secondIndex)
         {
-            string firstHash=seed1;
-            string secondHash=seed2;
-            for (int i = 1;i<firstIndex; i++)
+            string firstHash = seed1;
+            string secondHash = seed2;
+            for (int i = 1; i < firstIndex; i++)
             {
-                byte [] result= hashWithSHA256(firstHash);
+                byte[] result = hashWithSHA256(firstHash);
                 firstHash = Encoding.Default.GetString(result);
             }
             for (int i = 1; i < secondIndex; i++)
@@ -156,8 +175,8 @@ namespace cs535_server
                 byte[] result = hashWithSHA256(secondHash);
                 secondHash = Encoding.Default.GetString(result);
             }
-            byte[] key = exclusiveOR(Encoding.Default.GetBytes(firstHash),Encoding.Default.GetBytes(secondHash));
-            return key; 
+            byte[] key = exclusiveOR(Encoding.Default.GetBytes(firstHash), Encoding.Default.GetBytes(secondHash));
+            return key;
         }
         public static byte[] exclusiveOR(byte[] arr1, byte[] arr2)
         {
@@ -357,7 +376,8 @@ namespace cs535_server
                 {
                     rekeyingCount++;
                     currentKey = getKey(1 + rekeyingCount, 100 - rekeyingCount);
-                    logs.AppendText("New key: " + generateHexStringFromByteArray(currentKey) + "\n");
+                    logs.AppendText("Switched to new key\n");
+                    //logs.AppendText("New key: " + generateHexStringFromByteArray(currentKey) + "\n");
                 }
             }
         }

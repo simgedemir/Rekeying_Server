@@ -43,7 +43,7 @@
             // 
             this.logs.Location = new System.Drawing.Point(140, 12);
             this.logs.Name = "logs";
-            this.logs.Size = new System.Drawing.Size(132, 210);
+            this.logs.Size = new System.Drawing.Size(191, 210);
             this.logs.TabIndex = 0;
             this.logs.Text = "";
             // 
@@ -108,7 +108,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new System.Drawing.Size(343, 261);
             this.Controls.Add(this.portBox);
             this.Controls.Add(this.listenButton);
             this.Controls.Add(this.label2);
